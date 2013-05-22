@@ -191,3 +191,30 @@ def gimpz(b, a = [1], N = 512):
 	y = si.lfilter(b, a, dirac_d)
 	return y, range(len(y))
 
+###############################################################################
+# group delay
+###############################################################################
+def ggroupdelay(b, a = [1], N=2**12):
+	"""
+	Returns the group delay of a filter defined by its coefficients. This 
+	simple implementation uses the factor that the phase response can be shown
+	to effectively be,
+	Tg = real[DFT(n.h[n]) / DFT(h[n])]
+	"""
+	
+	fft_N = N
+
+	# Get the impulse response.	
+	h, w = gimpz(b, a, fft_N)
+	# denominator	
+	W, denom = si.freqz(h, 1, fft_N) 
+	# ramped impulse.
+	ramped_impulse = arange(len(h)) * h
+	# numerator
+	W, numer = si.freqz(ramped_impulse, 1, fft_N) 
+	# group delay
+	grp_dly = fftshift(real(numer/denom))
+	return fft_N, grp_dly
+	
+	
+
