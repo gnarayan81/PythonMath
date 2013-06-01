@@ -20,7 +20,7 @@ frames = 4000
 read_file = wv.open('male.wav', 'rb')
 chans, bytesize, samplerate, framecount, s1, c = read_file.getparams()
 data_frames_s = read_file.readframes(frames)
-data_frames = np.fromstring(data_frames_s, 'Int16')
+data_frames = np.fromstring(data_frames_s, 'Int16')			
 md = max(data_frames)
 data_frames = data_frames.astype('float') / md
 
@@ -28,7 +28,9 @@ gap.put_audio_data('precepsd.wav', np.real(data_frames), chans, bytesize, sample
 
 ## spectrum
 N_fft = 1 << int(np.log2(max(samplerate, frames)) + 1)
-fft_sine = fft.fft(data_frames, N_fft)
+
+ceps_sound, fft_sine, angle_sound = gap.ceps(data_frames, N_fft, 'real')
+
 pyl.figure('FFT of speech')
 pyl.subplot(211)
 pyl.plot(np.linspace(-samplerate/2, samplerate/2, N_fft), np.log10(fft.fftshift(abs(fft_sine))), 'g')
@@ -37,7 +39,6 @@ pyl.xlim([-samplerate/2, samplerate/2])
 pyl.xlabel('Hz')
 
 ## Real cepstrum
-ceps_sound = fft.ifft(np.log10(abs(fft_sine)), N_fft)
 pyl.subplot(212)
 abs_cs = (ceps_sound)
 pyl.plot(np.linspace(-samplerate/2, samplerate/2, N_fft), fft.fftshift((abs_cs)), 'r')
@@ -53,9 +54,7 @@ pyl.xlabel('Hz')
 ## Window the cepstrum
 # Hamming
 wnd_size_div = 32
-wndw_s = si.kaiser(N_fft/wnd_size_div, 400)
-wndw = np.concatenate([np.zeros((wnd_size_div - 1)*N_fft/(2*wnd_size_div)), wndw_s])
-wndw = np.concatenate([wndw, np.zeros((wnd_size_div - 1)*N_fft/(2*wnd_size_div))])
+wndw = gap.wndow(N_fft, N_fft/wnd_size_div, kind = 'kaiser', shaper = 400)
 windowed_ceps = wndw*fft.fftshift(abs_cs)
 
 pyl.figure('Windowed ceps')
