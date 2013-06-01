@@ -216,5 +216,24 @@ def ggroupdelay(b, a = [1], N=2**12):
 	grp_dly = fftshift(real(numer/denom))
 	return fft_N, grp_dly
 	
+################################################################################
+# Reflection coefficients using Durbin's algorithm
+################################################################################
+def durbinrefl(A, ordN = -1):
+	if ordN < 1: 
+		ordN = A.size
 	
-
+	refl = np.zeros(ordN - 1) # reflection coefficients
+	
+	Alower = A # prime
+	
+	for i in range(ordN - 1):
+		Aflip = Alower[::-1] # flip
+		refl[refl.size - i - 1] = Alower[Alower.size - 1] # kN
+		Alower = (Alower - refl[refl.size - i - 1] * Aflip) / (1 -
+		refl[refl.size - i - 1]**2)
+		Alower = Alower[:-1] # Get the last N - 1
+		#if np.abs(refl[refl.size - i - 1]) >= 1.0:
+			#print('Pole outside unit circle at', refl[refl.size - i -
+			#1], '.')
+	return refl
